@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Atma:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../static/global.css">
+    <link rel="stylesheet" href="../static/homepage.css">
+
+    <style>
+        /* Modal Overlay */
+        #success-overlay {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        /* Modal Container */
+        #success-modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-sizing: border-box;
+        }
+
+        /* Close Button */
+        #close-modal-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 8px 16px;
+            background: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: sans-serif;
+        }
+
+        #close-modal-btn:hover {
+            background: #45a049;
+        }
+
+        /* Animation Styles */
+        #success-modal-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Hide the checkbox */
+        #check {
+            display: none;
+        }
+
+        h2 {
+            font-size: 36px;
+            margin-top: 40px;
+            color: #333;
+            opacity: 0;
+        }
+
+        /* Animate h2 when checked */
+        /* Delay slightly less since we sped up other animations */
+        #check:checked ~ svg + h2 {
+            animation: .5s title ease-in-out;
+            animation-delay: 1.0s;
+            animation-fill-mode: forwards;
+        }
+
+        .circle {
+            stroke-dasharray: 1194;
+            stroke-dashoffset: 1194;
+        }
+
+        /* Speed up the circle animation */
+        #check:checked + svg .circle {
+            animation: circle 0.8s ease-in-out;
+            animation-fill-mode: forwards;
+        }
+
+        .tick {
+            stroke-dasharray: 350;
+            stroke-dashoffset: 350;
+        }
+
+        /* Speed up the tick animation and reduce delay slightly */
+        #check:checked + svg .tick {
+            animation: tick 0.6s ease-out;
+            animation-fill-mode: forwards;
+            animation-delay: 0.75s;
+        }
+
+        @keyframes circle {
+            from {
+                stroke-dashoffset: 1194;
+            }
+            to {
+                stroke-dashoffset: 2388;
+            }
+        }
+
+        @keyframes tick {
+            from {
+                stroke-dashoffset: 350;
+            }
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        @keyframes title {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<div class="hero-text">
+    <p>Fun-Filled Party Bags in Exeter!</p>
+    <p class="hero-text-small">We're a startup based in Exeter, specializing in crafting fun, customized party bags for all occasions. Our mission is to add a little extra joy to your celebrations!</p>
+</div>
+
+<div class="row-of-whatever">
+    <h3>Seasonal Bags</h3>
+    <div class="row-of-categories">
+        <div class="category-card"><a href="/product/4">
+            <img src="hero-image.jpg" alt="Halloween" width="200" height="200">
+            <p>Test</p></a>
+        </div>
+        <div class="category-card">
+            <img src="hero-image.jpg" alt="Christmas" width="200" height="200">
+            <p>Christmas</p>
+        </div>
+        <div class="category-card">
+            <img src="hero-image.jpg" alt="Easter" width="200" height="200">
+            <p>Easter</p>
+        </div>
+    </div>
+</div>
+
+<div class="row-of-whatever">
+    <h3>Seasonal Bags</h3>
+    <div class="row-of-categories">
+        <div class="category-card"><a href="/product">
+            <img src="hero-image.jpg" alt="Halloween" width="200" height="200">
+            <p>Halloween</p></a>
+        </div>
+        <div class="category-card">
+            <img src="hero-image.jpg" alt="Christmas" width="200" height="200">
+            <p>Christmas</p>
+        </div>
+        <div class="category-card">
+            <img src="hero-image.jpg" alt="Easter" width="200" height="200">
+            <p>Easter</p>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div id="success-overlay">
+    <div id="success-modal">
+        <div id="success-modal-container">
+            <input type="checkbox" id="check">
+            <svg width="300" height="300">
+              <circle fill="none" stroke="#68E534" stroke-width="20" cx="150" cy="150" r="140" class="circle" stroke-linecap="round" transform="rotate(-90 150 150) "/>
+              <!-- Adjusted coordinates for a more centered tick inside the circle -->
+              <polyline fill="none" stroke="#68E534" stroke-width="24" points="85,185 140,220 215,80" stroke-linecap="round" stroke-linejoin="round" class="tick" />
+            </svg>
+            <h2>Payment Success</h2>
+            <button id="close-modal-btn">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success') === 'true') {
+        // Show modal
+        document.getElementById('success-overlay').style.display = 'block';
+        // Trigger the animation by checking the checkbox
+        document.getElementById('check').checked = true;
+    }
+
+    document.getElementById('close-modal-btn').addEventListener('click', function() {
+        document.getElementById('success-overlay').style.display = 'none';
+    });
+
+    // Optionally close when clicking outside of modal
+    document.getElementById('success-overlay').addEventListener('click', function(event) {
+        if (event.target === this) {
+            document.getElementById('success-overlay').style.display = 'none';
+        }
+    });
+</script>
+
+{% endblock %}

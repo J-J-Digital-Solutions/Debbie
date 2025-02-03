@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Atma:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='global.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='product.css') }}">
+</head>
+
+<div class="product">
+    <div class="product-hero">
+        <img src="{{ url_for('static', filename=product.image) }}" alt="{{ product.name }}" width="400" height="400">
+        
+        <div class="product-images">
+            {% for suggestion in suggestions %}
+                <div class="category-card">
+                    <a href="{{ url_for('product', product_id=suggestion.id) }}">
+                        <img src="{{ url_for('static', filename=suggestion.image) }}" alt="{{ suggestion.name }}" width="100" height="100">
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div>
+        <h1>{{ product.name }}</h1>
+        <h3>{{ product.category }}</h3>
+        <p>Includes: {{ product.description }}</p>
+        <p>£{{ product.price }}</p>
+
+        <div class="stock">
+            {% if product.stock %}
+                <p class="green">In stock</p>
+                <p>Quantity:</p>
+                
+                <!-- This single <input> is used for both forms -->
+                <input type="number" id="quantity" value="1" min="1" max="10">
+                
+                <!-- Small JS function to grab the quantity and assign it to both hidden inputs -->
+                <script>
+                  function updateQuantityInputs() {
+                    const q = document.getElementById('quantity').value;
+                    document.getElementById('quantity_cart').value = q;
+                    document.getElementById('quantity_buy_now').value = q;
+                  }
+                </script>
+                
+                <!-- Add to Cart -->
+                <form 
+                    action="{{ url_for('add_to_cart', product_id=product.id) }}" 
+                    method="POST"
+                    onsubmit="updateQuantityInputs();"
+                >
+                    <input type="hidden" id="quantity_cart" name="quantity" value="1">
+                    <button type="submit">Add to cart</button>
+                </form>
+
+                <!-- Buy Now -->
+                <form
+                    action="{{ url_for('buy_now', product_id=product.id) }}"
+                    method="POST"
+                    onsubmit="updateQuantityInputs();"
+                >
+                    <!-- This hidden field ensures the server knows how many to buy now -->
+                    <input type="hidden" id="quantity_buy_now" name="quantity" value="1">
+                    <button type="submit" class="buy-now">Buy Now</button>
+                </form>
+
+
+            {% else %}
+                <p class="red">Out of stock</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

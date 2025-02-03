@@ -1,0 +1,67 @@
+
+.upper-menu {
+    display: flex;
+    justify-content: space-between;
+    padding: 2vh 5vw;
+    font-size: 2.5vh;
+    background: linear-gradient(135deg, #ffe7d4, #ffcad4);
+    color: #333;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid #ccc;
+}
+
+.duo-links a {
+    padding: 0vh 2vh;
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+.duo-links a:hover {
+    color: #ff6f61;
+}
+
+.main-menu {
+    display: flex;
+    justify-content: space-between;
+    padding: 2vh 5vw;
+    font-size: 3vh;
+    background: #fff;
+    color: #333;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid #ccc;
+}
+
+.main-menu a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+.main-menu a:hover {
+    color: #ff6f61;
+}
+
+.sub-menu {
+    display: flex;
+    justify-content: space-between;
+    padding: 2vh 5vw;
+    font-size: 2.5vh;
+    background-color: #fff4e6;
+    color: #444;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-top: 1px solid #ccc;
+}
+
+.sub-menu a {
+    text-decoration: none;
+    color: #444;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+.sub-menu a:hover {
+    color: #ff6f61;
+}

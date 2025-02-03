@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+    <h1>Admin Login</h1>
+    <h1>Password = "Password123" change + remove before release!</h1>
+
+    {% with messages = get_flashed_messages(category_filter=["error"]) %}
+      {% if messages %}
+        <ul>
+          {% for message in messages %}
+            <li style="color:red;">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('admin_login') }}">
+        <label for="admin_password">Password:</label>
+        <input type="password" id="admin_password" name="admin_password" required>
+        <button type="submit">Login</button>
+    </form>
+
+</body>
+</html>

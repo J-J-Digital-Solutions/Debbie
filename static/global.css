@@ -1,0 +1,15 @@
+p, a, h1, h2, h3, h4, h5 {
+  font-family: "Atma", system-ui;
+  font-weight: 400;
+  font-style: normal;
+  text-decoration: none;
+}
+
+body {
+  display: block;
+  margin: 0px;
+}
+
+.homepage {
+  margin: 0vh 10vh;
+}

@@ -1,0 +1,56 @@
+<!-- templates/cart.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Your Cart</title>
+</head>
+<body>
+    <h1>Your Cart</h1>
+    {% if cart_items %}
+        <form action="{{ url_for('update_cart') }}" method="POST">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Price (each)</th>
+                        <th>Quantity</th>
+                        <th>Subtotal</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in cart_items %}
+                    <tr>
+                        <td>{{ item.product.name }}</td>
+                        <td>£{{ "%.2f"|format(item.product.price) }}</td>
+                        <td>
+                            <input 
+                                type="number" 
+                                name="quantity[{{ item.product.id }}]" 
+                                value="{{ item.quantity }}" 
+                                min="1"
+                            />
+                        </td>
+                        <td>£{{ "%.2f"|format(item.product.price * item.quantity) }}</td>
+                        <td>
+                            <a href="{{ url_for('remove_from_cart', product_id=item.product.id) }}">Remove</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <button type="submit">Update Cart</button>
+        </form>
+
+        <h2>Total: £{{ "%.2f"|format(total) }}</h2>
+
+        <form action="{{ url_for('create_checkout_session') }}" method="POST">
+            <button type="submit">Checkout</button>
+        </form>
+
+    {% else %}
+        <p>Your cart is empty.</p>
+    {% endif %}
+</body>
+</html>
