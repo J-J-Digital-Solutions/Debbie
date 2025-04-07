@@ -85,3 +85,9 @@
     from { transform: scale(0.9); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
 }
+
+@media only screen and (max-width: 768px) {
+    .row-of-categories {
+        flex-direction: column;
+    }
+}

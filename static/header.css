@@ -65,3 +65,13 @@
 .sub-menu a:hover {
     color: #ff6f61;
 }
+
+@media only screen and (max-width: 768px) {
+    .upper-menu {
+        display: none;
+    }
+
+    .sub-menu {
+        display: none;
+    }
+}

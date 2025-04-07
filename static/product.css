@@ -1,28 +1,121 @@
-.product {  
+.product {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr;
-    gap: 0px 0px;
-    grid-auto-flow: row;
-    grid-template-areas: ". .";
+    grid-gap: 40px;
+    padding: 20px;
+    align-items: start;
 }
 
 .product-hero {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    padding: 0;
 }
 
-.product-images {
-    display: flex;
-    margin-top: 1vh;
-    border-radius: 5px;
+.product-hero img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
 }
 
-.stock .red{
+.product-info {
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background-color: #fff;
+}
+
+.product-info h1 {
+    margin-bottom: 10px;
+    font-family: 'Anton', sans-serif;
+}
+
+.product-info h3 {
+    margin-bottom: 15px;
+    font-family: 'Atma', sans-serif;
+}
+
+.product-info p {
+    margin: 8px 0;
+}
+
+.label {
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+.stock {
+    margin-top: 20px;
+}
+
+.stock .red {
     color: red;
 }
 
-.stock .green{
+.stock .green {
     color: green;
+}
+
+/* Style for the quantity selector */
+input[type="number"] {
+    width: 60px;
+    padding: 5px;
+    font-size: 1em;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-right: 10px;
+}
+
+/* Style for the buttons */
+button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-right: 10px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* Specific style for the 'Buy Now' button */
+button.buy-now {
+    background-color: #28a745;
+}
+
+button.buy-now:hover {
+    background-color: #218838;
+}
+
+/* Ensure forms in the stock section display inline */
+.stock form {
+    display: inline-block;
+    margin-right: 10px;
+}
+
+@media only screen and (max-width: 768px) {
+    .product {
+        grid-template-columns: 1fr;
+        grid-gap: 20px;
+        padding: 10px;
+    }
+    .product-info {
+        padding: 15px;
+    }
+    .product-hero img {
+        width: 100%;
+        height: auto;
+    }
+    button {
+        padding: 8px 12px;
+        font-size: 0.9em;
+    }
+    input[type="number"] {
+        width: 50px;
+        padding: 4px;
+        font-size: 0.9em;
+    }
 }

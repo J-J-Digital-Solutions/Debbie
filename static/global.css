@@ -5,11 +5,13 @@ p, a, h1, h2, h3, h4, h5 {
   text-decoration: none;
 }
 
-body {
-  display: block;
-  margin: 0px;
-}
+@media (min-width: 768px) {
+  body {
+    display: block;
+    margin: 0px;
+  }
 
-.homepage {
-  margin: 0vh 10vh;
+  .homepage {
+    margin: 0vh 10vh;
+  }
 }

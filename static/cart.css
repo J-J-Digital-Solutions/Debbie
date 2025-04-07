@@ -1,0 +1,153 @@
+/* Global Styles */
+body {
+    background: #f9f9f9;
+    font-family: 'Atma', sans-serif;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+/* Container to center the cart content and allow for a wider table */
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 3vh auto;
+    padding: 20px;
+}
+
+/* Main Heading */
+h1 {
+    text-align: center;
+    font-size: 3rem;
+    font-family: 'Anton', sans-serif;
+    margin-bottom: 30px;
+    color: #333;
+}
+
+/* Cart Table Styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+}
+
+thead th {
+    background: #ffe7d4;  /* solid pastel color */
+    color: #333;
+    font-family: 'Anton', sans-serif;
+    font-size: 1.2rem;
+    padding: 15px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+tbody td {
+    padding: 15px;
+    text-align: center;
+    font-size: 1rem;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+/* Alternate row background for readability */
+tbody tr:nth-child(even) {
+    background-color: #fafafa;
+}
+
+tbody tr:hover {
+    background-color: #f5f5f5;
+}
+
+/* Quantity Input Field */
+input[type="number"] {
+    width: 70px;
+    padding: 8px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    text-align: center;
+}
+
+/* Button Styles */
+button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    display: block;
+    margin: 20px auto;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* Specific Checkout Button */
+button.checkout-btn {
+    background-color: #28a745;
+}
+
+button.checkout-btn:hover {
+    background-color: #218838;
+}
+
+/* Remove Link Styling */
+a.remove {
+    color: #dc3545;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
+}
+
+a.remove:hover {
+    text-decoration: underline;
+    color: #a71d2a;
+}
+
+/* Total Price Display */
+.total-price {
+    text-align: right;
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-top: 20px;
+    padding-right: 10px;
+}
+
+/* Message for an empty cart */
+.empty-cart {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #666;
+    margin-top: 40px;
+}
+
+@media only screen and (max-width: 768px) {
+    .container {
+        width: 95%;
+        padding: 10px;
+    }
+    table, th, td {
+        font-size: 0.9rem;
+        padding: 8px;
+    }
+    /* Hide the Subtotal column (4th column) on mobile */
+    table thead th:nth-child(4),
+    table tbody td:nth-child(4) {
+        display: none;
+    }
+    input[type="number"] {
+        width: 50px;
+        padding: 6px;
+        font-size: 0.9rem;
+    }
+    button {
+        padding: 10px 15px;
+        font-size: 0.9rem;
+    }
+}

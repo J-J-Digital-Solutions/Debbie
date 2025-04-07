@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 import os
 from datetime import datetime
@@ -28,21 +28,26 @@ class Product(db.Model):
     name = db.Column(db.String(50))
     description = db.Column(db.String(300))
     category = db.Column(db.String(50))
+    subcategory = db.Column(db.String(50))
     image = db.Column(db.String(100))
     price = db.Column(Numeric(10, 2))
-    stock = db.Column(db.Boolean)
+    stock = db.Column(db.Integer, default=0)
 
 
 @app.route("/")
 def homepage():
-    return render_template("home.html")
+    categories = ['Birthdays', 'Seasonal', 'Event', 'NSFW', 'Custom']
+    category_products = {}
+    for category in categories:
+        products = Product.query.filter_by(category=category).order_by(func.random()).limit(3).all()
+        category_products[category] = products
+    return render_template("home.html", category_products=category_products)
 
 
 @app.route("/product/<int:product_id>")
 def product(product_id):
     product = Product.query.get_or_404(product_id)
-    suggestions = Product.query.filter(Product.id != product_id).order_by(func.random()).limit(3).all()
-    return render_template("product.html", product=product, suggestions=suggestions)
+    return render_template("product.html", product=product)
 
 
 ################################## ADDING PRODUCTS ##################################
@@ -73,9 +78,7 @@ def view_cart():
                 'quantity': quantity
             })
 
-    # Calculate a simple total
     total = sum(item['product'].price * item['quantity'] for item in cart_items)
-    
     return render_template('cart.html', cart_items=cart_items, total=total)
 
 
@@ -104,38 +107,66 @@ def add_to_cart(product_id):
     return redirect(url_for('view_cart'))
 
 
-@app.route('/cart/remove/<int:product_id>', methods=['POST', 'GET'])
-def remove_from_cart(product_id):
-    if 'cart' in session:
-        product_id_str = str(product_id)
-        if product_id_str in session['cart']:
-            # Remove the product entirely
-            session['cart'].pop(product_id_str)
-            session.modified = True
-            flash("Item removed from cart.", "info")
-
-    return redirect(url_for('view_cart'))
-
-
 @app.route('/cart/update', methods=['POST'])
 def update_cart():
     if 'cart' not in session:
         session['cart'] = {}
 
+    # Process all quantity fields (e.g., "quantity[42]")
     for field_name in request.form:
-        # field_name might be something like "quantity[42]"
         if field_name.startswith("quantity[") and field_name.endswith("]"):
-            product_id = field_name[9:-1]  # extract the number between brackets
-            quantity_str = request.form[field_name]
+            product_id = field_name[9:-1]  # extract the product id
             try:
-                session['cart'][product_id] = int(quantity_str)
+                session['cart'][product_id] = int(request.form[field_name])
             except ValueError:
-                # fallback if the user typed something invalid
-                pass
+                # Ignore invalid input
+                continue
 
     session.modified = True
-    flash("Cart updated!", "success")
-    return redirect(url_for('view_cart'))
+
+    # If this is an AJAX request, return JSON data
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        cart_items = []
+        total = 0.0
+        for pid, quantity in session['cart'].items():
+            product = Product.query.get(int(pid))
+            if product:
+                subtotal = float(product.price) * quantity
+                cart_items.append({
+                    'product_id': product.id,
+                    'subtotal': subtotal
+                })
+                total += subtotal
+        return jsonify({'cart_items': cart_items, 'total': total})
+    else:
+        flash("Cart updated!", "success")
+        return redirect(url_for('view_cart'))
+
+
+@app.route('/cart/remove/<int:product_id>', methods=['POST', 'GET'])
+def remove_from_cart(product_id):
+    product_id_str = str(product_id)
+    if 'cart' in session and product_id_str in session['cart']:
+        session['cart'].pop(product_id_str)
+        session.modified = True
+        flash("Item removed from cart.", "info")
+
+    # If AJAX request, send back JSON with updated cart data
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        cart_items = []
+        total = 0.0
+        for pid, quantity in session.get('cart', {}).items():
+            product = Product.query.get(int(pid))
+            if product:
+                subtotal = float(product.price) * quantity
+                cart_items.append({
+                    'product_id': product.id,
+                    'subtotal': subtotal
+                })
+                total += subtotal
+        return jsonify({'cart_items': cart_items, 'total': total, 'cart_empty': total == 0})
+    else:
+        return redirect(url_for('view_cart'))
 
 
 @app.route('/create-checkout-session', methods=['POST'])
@@ -145,27 +176,52 @@ def create_checkout_session():
             flash("Your cart is empty!", "error")
             return redirect(url_for('view_cart'))
 
+        # Check stock availability for each item in the cart
+        for product_id, quantity in session['cart'].items():
+            product = Product.query.get_or_404(product_id)
+            if quantity > product.stock:
+                flash(
+                    f"Not enough stock for {product.name}. Available: {product.stock}, Requested: {quantity}.",
+                    "error"
+                )
+                return redirect(url_for('view_cart'))
+
         line_items = []
         for product_id, quantity in session['cart'].items():
             product = Product.query.get_or_404(product_id)
             line_items.append({
                 'price_data': {
                     'currency': 'gbp',
+                    'unit_amount': int(product.price * 100),
                     'product_data': {
                         'name': product.name,
-                        'description': product.description
+                        'description': product.description,
+                        'metadata': {'product_id': str(product.id)}
                     },
-                    'unit_amount': int(product.price * 100),
                 },
                 'quantity': quantity,
             })
+
+        # Add delivery fee (without metadata)
+        delivery_fee_pence = 399
+        line_items.append({
+            'price_data': {
+                'currency': 'gbp',
+                'unit_amount': delivery_fee_pence,
+                'product_data': {
+                    'name': 'Delivery Fee',
+                    'description': 'Flat delivery fee'
+                },
+            },
+            'quantity': 1,
+        })
 
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             line_items=line_items,
             mode='payment',
-            success_url='http://192.168.0.14:81/success?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url='http://192.168.0.14:81',
+            success_url='http://192.168.0.56:81/success?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url='http://192.168.0.56:81',
             billing_address_collection='required',
             shipping_address_collection={'allowed_countries': ['GB']}
         )
@@ -178,32 +234,51 @@ def create_checkout_session():
 
 @app.route('/buy_now/<int:product_id>', methods=['POST'])
 def buy_now(product_id):
-    """
-    This route checks out a single product immediately (bypassing the cart).
-    """
     try:
         product = Product.query.get_or_404(product_id)
-
         quantity = int(request.form.get('quantity', '1'))
+
+        # Check if the desired quantity exceeds available stock
+        if quantity > product.stock:
+            flash(
+                f"Not enough stock for {product.name}. Available: {product.stock}, Requested: {quantity}.",
+                "error"
+            )
+            return redirect(url_for('product', product_id=product.id))
 
         line_items = [{
             'price_data': {
                 'currency': 'gbp',
+                'unit_amount': int(product.price * 100),
                 'product_data': {
                     'name': product.name,
-                    'description': product.description
+                    'description': product.description,
+                    'metadata': {'product_id': str(product.id)}
                 },
-                'unit_amount': int(product.price * 100),
             },
             'quantity': quantity,
         }]
+
+        # Add delivery fee (without metadata)
+        delivery_fee_pence = 399
+        line_items.append({
+            'price_data': {
+                'currency': 'gbp',
+                'unit_amount': delivery_fee_pence,
+                'product_data': {
+                    'name': 'Delivery Fee',
+                    'description': 'Flat delivery fee'
+                },
+            },
+            'quantity': 1,
+        })
 
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             line_items=line_items,
             mode='payment',
-            success_url='http://192.168.4.121:81/success?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url='http://192.168.4.121:81',
+            success_url='http://192.168.0.56:81/success?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url='http://192.168.0.56:81',
             billing_address_collection='required',
             shipping_address_collection={'allowed_countries': ['GB']}
         )
@@ -218,7 +293,7 @@ def buy_now(product_id):
 def stripe_webhook():
     payload = request.get_data(as_text=True)
     sig_header = request.headers.get('Stripe-Signature')
-    endpoint_secret = 'your_webhook_secret'
+    endpoint_secret = 'whsec_zJTsChvuQhfIoqlxCMUk5b62MH32lK8u'
 
     try:
         event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
@@ -234,28 +309,45 @@ def stripe_webhook():
     return 'Success', 200
 
 
-######### Function runs when payment is successful (secure do to webhooks) grabs customer info from stripe form and sends order email then redirects to the home page with a success message #########
 @app.route('/success')
 def success():
     session_id = request.args.get('session_id')
     if not session_id:
         return "Invalid session.", 400
 
-    session = stripe.checkout.Session.retrieve(session_id)
-    if not session or session.payment_status != 'paid':
+    # Retrieve the Stripe session
+    stripe_session = stripe.checkout.Session.retrieve(session_id)
+    if not stripe_session or stripe_session.payment_status != 'paid':
         return "Payment not verified.", 400
-    line_items = stripe.checkout.Session.list_line_items(session_id)
-    customer_name = session.customer_details.name if session.customer_details and session.customer_details.name else "Unknown Customer"
-    customer_email = session.customer_details.email if session.customer_details and session.customer_details.email else "No Email Provided"
-    customer_address = (
-        session.customer_details.address.line1
-        if session.customer_details and session.customer_details.address and session.customer_details.address.line1
-        else "No Address Provided"
-    )
-    customer_city = session.customer_details.address.city if session.customer_details and session.customer_details.address and session.customer_details.address.city else "N/A"
-    customer_postal_code = session.customer_details.address.postal_code if session.customer_details and session.customer_details.address and session.customer_details.address.postal_code else "N/A"
-    customer_country = session.customer_details.address.country if session.customer_details and session.customer_details.address and session.customer_details.address.country else "N/A"
 
+    # Retrieve line items and expand the product object to access its metadata
+    line_items = stripe.checkout.Session.list_line_items(
+        session_id,
+        expand=['data.price.product']
+    )
+
+    # Deduct stock based on metadata in each line item (skip items without metadata, e.g. delivery fee)
+    for item in line_items.data:
+        if not item.price.product or not item.price.product.metadata:
+            continue
+        product_id = item.price.product.metadata.get('product_id')
+        if product_id:
+            quantity = item.quantity
+            product = Product.query.get(int(product_id))
+            if product:
+                product.stock = max(0, product.stock - quantity)
+    db.session.commit()
+
+    # Retrieve customer details from Stripe
+    customer_name = stripe_session.customer_details.name or "Unknown Customer"
+    customer_email = stripe_session.customer_details.email or "No Email Provided"
+    address_obj = stripe_session.customer_details.address
+    customer_address = address_obj.line1 if address_obj and address_obj.line1 else "No Address Provided"
+    customer_city = address_obj.city if address_obj and address_obj.city else "N/A"
+    customer_postal_code = address_obj.postal_code if address_obj and address_obj.postal_code else "N/A"
+    customer_country = address_obj.country if address_obj and address_obj.country else "N/A"
+
+    # Build the order summary
     order_summary = ""
     for item in line_items.data:
         product_name = item.description
@@ -278,6 +370,7 @@ def success():
         f"Please process this order."
     )
 
+    # Send order confirmation email
     smtp_server = 'smtp.gmail.com'
     smtp_port = 465
     sender_email = 'james.robinson156.156@gmail.com'
@@ -298,8 +391,10 @@ def success():
     except Exception as e:
         print(f'Failed to send email: {e}')
 
+    # Clear the cart
     session['cart'] = {}
     session.modified = True
+
     return redirect("/?success=true", code=302)
 
 
@@ -331,6 +426,7 @@ def admin_new_product():
         name = request.form.get('name')
         description = request.form.get('description')
         category = request.form.get("category")
+        subcategory = request.form.get("subcategory")
         image_file = request.files.get('image')
 
         if image_file and image_file.filename:
@@ -343,12 +439,18 @@ def admin_new_product():
 
         price_str = request.form.get('price', '0.0')
         price = float(price_str) if price_str else 0.0
-        stock = True if request.form.get('stock') == 'on' else False
+
+        stock_str = request.form.get('stock', '0')
+        try:
+            stock = int(stock_str)
+        except ValueError:
+            stock = 0
 
         new_product = Product(
             name=name,
             description=description,
             category=category,
+            subcategory=subcategory,
             image=image_path,
             price=price,
             stock=stock
@@ -371,6 +473,7 @@ def admin_edit_product(product_id):
         product.name = request.form.get('name')
         product.description = request.form.get('description')
         product.category = request.form.get('category')
+        product.subcategory = request.form.get('subcategory')
 
         image_file = request.files.get('image')
         if image_file and image_file.filename.strip():
@@ -381,7 +484,12 @@ def admin_edit_product(product_id):
 
         price_str = request.form.get('price', '0.0')
         product.price = float(price_str) if price_str else 0.0
-        product.stock = True if request.form.get('stock') == 'on' else False
+
+        stock_str = request.form.get('stock', '0')
+        try:
+            product.stock = int(stock_str)
+        except ValueError:
+            product.stock = 0
 
         db.session.commit()
         return redirect(url_for('admin_dashboard'))
